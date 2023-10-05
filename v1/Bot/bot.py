@@ -27,54 +27,53 @@ async def add(ctx, *args):
         author = '@' + str(ctx.author).split('#')[0]
         print(args)
 
-        if(len(args) > 0):
+        if args:
             url = args[0]
-            if(validators.url(url)):
+            if (validators.url(url)):
                 embed = discord.Embed(title="Adding Data...", description="Please Wait while I upload the data", color=discord.Color.green())
                 await ctx.send(embed=embed)
                 #Its a valid link
-                if((doesItExist(url) == False) and (amIThere(url) == False)):
+                if ((doesItExist(url) == False) and (amIThere(url) == False)):
                     # amIThere checks if its on Gdrive and doesItexist on notion db
                     #The link doesnt exist in the database
-                    if(len(args) > 1):             
+                    if (len(args) > 1):             
                         #Add data
                         if(".pdf" in url):
                             gDrive_link = downloadFile(url)
                             addPDF(gDrive_link, author, giveTitle(url), giveTags(args))
                         else:
                             addData(url, author, giveTags(args))
+                    elif (".pdf" in url):
+                        gDrive_link = downloadFile(url)
+                        addPDF(gDrive_link,author, giveTitle(url))
                     else:
-                        #Tag not provided
-                        if(".pdf" in url):
-                            gDrive_link = downloadFile(url)
-                            addPDF(gDrive_link,author, giveTitle(url))
-                        else:
-                            addData(url, author)
+                        addData(url, author)
 
                     #Send confirmation that data was pushed
-                    embed = discord.Embed(title="Data added", description="New link added by {}".format(author), color=discord.Color.from_rgb(190, 174, 226))
-                    await ctx.send(embed=embed)
-
+                    embed = discord.Embed(
+                        title="Data added",
+                        description=f"New link added by {author}",
+                        color=discord.Color.from_rgb(190, 174, 226),
+                    )
                 else:
                     #the link was already in the database
                     #Preventing duplication of data
                     embed = discord.Embed(title="Already Added", description="This link is already in the refrences page", color=discord.Color.red())
-                    await ctx.send(embed=embed)
             else:
                 #Invalid URL provided
                 embed = discord.Embed(title="Invalid URL provided",
                                   description="Please check the URL you have provided", color=discord.Color.red())
-                await ctx.send(embed=embed)
         else:
             embed = discord.Embed(
                 title="URL not provided", description="Abe kuch to daal de!", color=discord.Color.red())
-            await ctx.send(embed=embed)
+
+        await ctx.send(embed=embed)
 
 
 @bot.command(name="search")
 async def search(ctx, *args):
     """Returns all entries containing the tag specified"""
-    if (len(args) > 0):
+    if args:
         #Check if the tag exists
         query = ""
 
@@ -86,26 +85,34 @@ async def search(ctx, *args):
 
         if (len(search_results) > 0):
             #Found a result
-            embed = discord.Embed(title="Search Results", description="Results for {}".format(query), color=discord.Color.green())
-            count = 1
-            for result in search_results:
+            embed = discord.Embed(
+                title="Search Results",
+                description=f"Results for {query}",
+                color=discord.Color.green(),
+            )
+            for count, result in enumerate(search_results, start=1):
                 #Add the result to the embed
-                embed.add_field(name=str(count)+". "+ result.title, value=result.url, inline=False)
-                count += 1
-            await ctx.send(embed=embed)
+                embed.add_field(
+                    name=f"{str(count)}. {result.title}",
+                    value=result.url,
+                    inline=False,
+                )
         else:
             #No results
-            embed = discord.Embed(title="No Results", description="No results found for {}".format(query), color=discord.Color.red())
-            await ctx.send(embed=embed)
-
+            embed = discord.Embed(
+                title="No Results",
+                description=f"No results found for {query}",
+                color=discord.Color.red(),
+            )
     else:
         #No tag provided
         embed = discord.Embed(title="Invalid Search", description="Kuch to daal de!", color=discord.Color.red())
-        await ctx.send(embed=embed)
+
+    await ctx.send(embed=embed)
 
 @bot.command(name="delete")
 async def delete(ctx, *args):
-    if (len(args) > 0):
+    if args:
         #Check if the tag exists
         query = ""
 
@@ -121,21 +128,29 @@ async def delete(ctx, *args):
             count = 1
             for result in search_results:
                 #Add the result to the embed
-                embed.add_field(name=str(count)+". "+ result.title, value=result.url, inline=False)
+                embed.add_field(
+                    name=f"{str(count)}. {result.title}",
+                    value=result.url,
+                    inline=False,
+                )
                 count += 1
             await ctx.send(embed=embed)
 
             def check(reply_user):
                 return reply_user.author == ctx.author and reply_user.channel == ctx.channel
-            
+
             # Timeout error
             try:
                 reply = await bot.wait_for("message", check=check, timeout=60)
             except asyncio.TimeoutError:
-                embed = discord.Embed(title="No response", description=f"Waited for 30s no response received", color=discord.Color.red())
+                embed = discord.Embed(
+                    title="No response",
+                    description="Waited for 30s no response received",
+                    color=discord.Color.red(),
+                )
                 await ctx.send("You have not responded for 30s so quitting!")
                 return
-            
+
             # Check if the input is valid
             try:
                 option_to_delete = int(reply.content)
@@ -148,7 +163,7 @@ async def delete(ctx, *args):
                 embed = discord.Embed(title="Enter Valid input", description="This option doesn't exist", color=discord.Color.red())
                 await ctx.send(embed=embed)
 
-            
+
         else:
             #No results
             embed = discord.Embed(title="No Results", description="No results found for {}".format(query), color=discord.Color.red())
@@ -204,12 +219,10 @@ async def help(ctx):
                 f"```{prefix}search <Tag 1> <Tag2>...<TagN>```": "List of records with Tag1, Tag2...Tag N",
                 f"```{prefix}delete <Tag1> <Tag2>....<TagN>```": "To delete record having tag 1,2...N. Will give list of records. Type in the serial number of the record you want to delete",}
 
-    
+
     embed = discord.Embed(title="List of commands:", description="These are the commands to use with this bot", color=discord.Color.green())
-    count = 1
-    for command in commands:
-          embed.add_field(name=str(count)+". "+ command, value=commands[command], inline=False)
-          count += 1
+    for count, (command, value_) in enumerate(commands.items(), start=1):
+        embed.add_field(name=f"{str(count)}. {command}", value=value_, inline=False)
     await ctx.send(embed=embed)
 
 @bot.event

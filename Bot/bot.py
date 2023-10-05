@@ -34,10 +34,8 @@ except:
 # get prefixes from the database
 def fillPrefix():
     global prefix_data
-    prefix_data = {}
     guilds = db.query(models.Clients).all()
-    for guild in guilds:
-        prefix_data[str(guild.guild_id)] = guild.prefix
+    prefix_data = {str(guild.guild_id): guild.prefix for guild in guilds}
 
 
 # cog loading reloading
@@ -84,12 +82,12 @@ async def setup(ctx):
             description="Setup complete",
             color=discord.Color.green(),
         )
-        await ctx.send(embed=embed)
     else:
         embed = discord.Embed(
             title="Setup failed", description="Setup failed", color=discord.Color.red()
         )
-        await ctx.send(embed=embed)
+
+    await ctx.send(embed=embed)
 
 
 @bot.command(name="prefix")
@@ -99,17 +97,17 @@ async def changePrefix(ctx):
     """
     global prefix
     if not utils.checkIfGuildPresent(ctx.guild.id):
-            embed = discord.Embed(
-                description="You are not registered, please run `" + prefix + "setup` first",
-                title="",
-                color=discord.Color.red(),
-            )
-            await ctx.send(embed=embed)
-            return
+        embed = discord.Embed(
+            description=f"You are not registered, please run `{prefix}setup` first",
+            title="",
+            color=discord.Color.red(),
+        )
+        await ctx.send(embed=embed)
+        return
     prefix = db.query(models.Clients).filter_by(guild_id=ctx.guild.id).first().prefix
     embed = discord.Embed(
         title="Enter the new prefix for your bot",
-        description="Current prefix is : " + prefix,
+        description=f"Current prefix is : {prefix}",
     )
     await ctx.send(embed=embed)
     try:
@@ -136,7 +134,7 @@ async def changePrefix(ctx):
         return
     embed = discord.Embed(
         title="Successfully updated prefix",
-        description="Prefix changed to " + new_prefix,
+        description=f"Prefix changed to {new_prefix}",
         color=discord.Color.green(),
     )
     await ctx.send(embed=embed)
@@ -144,7 +142,7 @@ async def changePrefix(ctx):
     # Update prefix_data and reload cogs
     global prefix_data
     prefix_data[str(ctx.guild.id)] = new_prefix
-    
+
     # update guild_info
     bot.guild_info[str(ctx.guild.id)].prefix = new_prefix
 

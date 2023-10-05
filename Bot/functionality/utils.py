@@ -30,9 +30,7 @@ def getTitle(url):
 
 
 def checkURL(url):
-    if validators.url(url):
-        return True
-    return False
+    return bool(validators.url(url))
 
 
 def getTags(args):
@@ -55,12 +53,7 @@ def getTags(args):
                 print(single_tag.strip().lower())
                 if {"name": single_tag.strip().lower()} not in final_tag:
                     final_tag.append({"name": single_tag.strip().lower()})
-                else:
-                    pass
-    if len(final_tag) > 0:
-        return final_tag
-    else:
-        return [{"name": "misc"}]
+    return final_tag if final_tag else [{"name": "misc"}]
 
 
 def getSearchTagsPayload(tags):
@@ -75,26 +68,23 @@ def getSearchTagsPayload(tags):
         for tag in list_of_tags:
             # Splitting the arguments to get the tags
             tag_list = tag.split(",")
-            for single_tag in tag_list:
-                if single_tag.strip() == "":
-                    continue
-                # Appending tag to the final_tag dict
-                final_tag.append(
-                    {
-                        "property": "Tag",
-                        "multi_select": {"contains": single_tag.strip().lower()},
-                    }
-                )
+            final_tag.extend(
+                {
+                    "property": "Tag",
+                    "multi_select": {"contains": single_tag.strip().lower()},
+                }
+                for single_tag in tag_list
+                if single_tag.strip() != ""
+            )
     return final_tag
 
 def getResults(url, payload, headers):
     response = requests.post(url, headers=headers, data=payload)
-    results = response.json()
-    return results
+    return response.json()
 
 def searchTag(notion_db_id, notion_api_key, tags):
     # Search for a tag
-    url = "https://api.notion.com/v1/databases/" + notion_db_id + "/query"
+    url = f"https://api.notion.com/v1/databases/{notion_db_id}/query"
     payload = json.dumps({"filter": {"and": tags}})
     headers = {
         "Authorization": notion_api_key,
@@ -118,7 +108,7 @@ def searchTag(notion_db_id, notion_api_key, tags):
             title=result["properties"]["Title"]["rich_text"][0]["plain_text"].strip(),
         )
         search_results.append(search_object)
-    
+
     while data["next_cursor"]:
         # pagination
         payload = json.dumps({"filter": {"and": tags}, "cursor": data["next_cursor"]})
@@ -139,51 +129,39 @@ def searchTag(notion_db_id, notion_api_key, tags):
 
 
 def getGuildData():
-    data = {}
     guilds = db.query(models.Clients).all()
-    for guild in guilds:
-        data[str(guild.guild_id)] = guild
-    return data
+    return {str(guild.guild_id): guild for guild in guilds}
 
 
 def getPrefixes():
-    prefixes = {}
     guilds = db.query(models.Clients).all()
-    for guild in guilds:
-        prefixes[str(guild.guild_id)] = guild.prefix
-    return prefixes
+    return {str(guild.guild_id): guild.prefix for guild in guilds}
 
 
 def checkIfGuildPresent(guildId):
-    guild = db.query(models.Clients).filter(models.Clients.guild_id == guildId).first()
-    if guild:
-        return True
-    return False
+    return bool(
+        guild := db.query(models.Clients)
+        .filter(models.Clients.guild_id == guildId)
+        .first()
+    )
 
 
 def getQueryForTitle(args):
-    query = ""
-    # check args
-    if len(args) > 0:
-        # received data
-        for arg in args:
-            query += arg + " "
-    else:
+    if len(args) <= 0:
         # no data received
         return None
-    query = query.strip()
-    return query
+    query = "".join(f"{arg} " for arg in args)
+    return query.strip()
 
 
 def deserialize(data):
-    obj = models.Clients(
+    return models.Clients(
         data["guild_id"],
         data["notion_api_key"],
         data["notion_db_id"],
         data["tag"],
         data["prefix"],
     )
-    return obj
 
 def fixDatabase():
     # update database
@@ -228,7 +206,7 @@ def getGuildInfo():
     return data
 
 def doesItExist(link, api_key, db_id):
-    url = "https://api.notion.com/v1/databases/" + db_id + "/query"
+    url = f"https://api.notion.com/v1/databases/{db_id}/query"
     payload = json.dumps({"filter": {"property": "URL", "url": {"equals": link}}})
     headers = {
         "Authorization": api_key,
@@ -240,9 +218,7 @@ def doesItExist(link, api_key, db_id):
         result = response.json()["results"]
     except:
         return False
-    if len(result) == 0:
-        return False
-    return True
+    return len(result) != 0
 
 
 def getFileTags(args):
@@ -258,12 +234,9 @@ def getFileTags(args):
         for tag in list_of_tags:
             # Splitting the arguments to get the tags
             tag_list = tag.split(",")
-            for single_tag in tag_list:
-                if single_tag.strip() == "":
-                    continue
-                # Appending tag to the final_tag dict
-                final_tag.append({"name": single_tag.strip().lower()})
-    if len(final_tag) > 0:
-        return final_tag
-    else:
-        return [{"name": "misc"}]
+            final_tag.extend(
+                {"name": single_tag.strip().lower()}
+                for single_tag in tag_list
+                if single_tag.strip() != ""
+            )
+    return final_tag if final_tag else [{"name": "misc"}]

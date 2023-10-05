@@ -35,7 +35,7 @@ class Add(commands.Cog):
         client = self.guild_data[str(guild_id)]
 
         # check if args are empty
-        if len(args) == 0:
+        if not args:
             # embed send
             embed = discord.Embed(
                 title="Please enter a valid query",

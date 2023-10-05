@@ -11,26 +11,23 @@ db = SessionLocal()
 
 
 async def verifyDetails(notion_api_key, notion_db_id, ctx):
-    url = "https://api.notion.com/v1/databases/" + notion_db_id
+    url = f"https://api.notion.com/v1/databases/{notion_db_id}"
     headers = {
         "Authorization": notion_api_key,
         "Notion-Version": "2021-05-13",
         "Content-Type": "application/json",
     }
     res = requests.get(url, headers=headers)
-    if res.status_code != 200:
-        res = res.json()
-        if res["code"] == "unauthorized":
-            await ctx.send("Invalid Notion API key")
-            return False
-        elif res["code"] == "object_not_found":
-            await ctx.send("Invalid Notion database id")
-            return False
-        else:
-            print(res)
-            return False
-    else:
+    if res.status_code == 200:
         return True
+    res = res.json()
+    if res["code"] == "unauthorized":
+        await ctx.send("Invalid Notion API key")
+    elif res["code"] == "object_not_found":
+        await ctx.send("Invalid Notion database id")
+    else:
+        print(res)
+    return False
 
 
 async def setupConversation(ctx, bot):
@@ -87,19 +84,15 @@ async def setupConversation(ctx, bot):
         )
         await ctx.send(embed=embed)
         return
-    if msg.content.lower().strip() == "y":
-        tag = True
-    else:
-        tag = False
-
+    tag = msg.content.lower().strip() == "y"
     # Verify the details
     verification = await verifyDetails(notion_api_key, notion_db_id, ctx)
     if verification:
-        # If guild already exists, update it
-        client = (
-            db.query(models.Clients).filter(models.Clients.guild_id == guild_id).first()
-        )
-        if client:
+        if client := (
+            db.query(models.Clients)
+            .filter(models.Clients.guild_id == guild_id)
+            .first()
+        ):
             client.notion_api_key = encrypt(notion_api_key)
             client.notion_db_id = encrypt(notion_db_id)
             client.tag = tag
@@ -111,15 +104,12 @@ async def setupConversation(ctx, bot):
             )
             await ctx.send(embed=embed)
 
-            # create obj
-            obj = models.Clients(
+            return models.Clients(
                 guild_id=guild_id,
                 notion_api_key=notion_api_key,
                 notion_db_id=notion_db_id,
                 tag=tag,
             )
-            return obj
-
         # If the details are correct, add them to the database
         new_client = models.Clients(
             guild_id=guild_id,

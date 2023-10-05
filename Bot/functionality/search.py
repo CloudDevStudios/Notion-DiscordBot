@@ -13,7 +13,7 @@ def getTitles(headers, payload, url):
 
 def getAllTitles(notion_db, notion_api):
     # manage payload and see across all pages
-    url = "https://api.notion.com/v1/databases/" + notion_db + "/query"
+    url = f"https://api.notion.com/v1/databases/{notion_db}/query"
     headers = {
         'Authorization': notion_api,
         'Content-Type': 'application/json',

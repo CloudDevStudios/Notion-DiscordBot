@@ -15,8 +15,7 @@ folder_id = ""
 
 def downloadFile(url):
     os.system(f"wget --no-check-certificate {url} -P ./data/")
-    g_link = uploadFiles(url.split("/")[-1], url)
-    return g_link
+    return uploadFiles(url.split("/")[-1], url)
 
 def uploadFiles(fileName, url):
     """Shows basic usage of the Drive v3 API.
@@ -28,7 +27,7 @@ def uploadFiles(fileName, url):
     # time.
     if os.path.exists('./creds/token.json'):
         creds = Credentials.from_authorized_user_file('./creds/token.json', SCOPES)
-    
+
     # if this file isnt there this may be a heroku instance
     elif os.path.exists('/app/google-credentials.json'):
         creds = Credentials.from_authorized_user_file('/app/google-credentials.json', SCOPES)
@@ -43,7 +42,7 @@ def uploadFiles(fileName, url):
         "name": fileName,
         "parents": [folder_id]
     }
-    path = "./data/{}".format(fileName)
+    path = f"./data/{fileName}"
     media = MediaFileUpload(path, mimetype=giveMimeType(fileName))
     file = service.files().create(body=file_metadata, media_body=media, fields='id').execute()
 

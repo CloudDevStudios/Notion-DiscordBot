@@ -4,7 +4,7 @@ import os
 
 database = os.environ["DATABASE_TOKEN"]
 print(database)
-url = "https://api.notion.com/v1/databases/" + str(database) + "/query"
+url = f"https://api.notion.com/v1/databases/{str(database)}/query"
 
 def doesItExist(link):
   payload = json.dumps({
@@ -25,16 +25,12 @@ def doesItExist(link):
     result = response.json()["results"]
   except:
     return False
-  if(len(result) == 0):
-    return False
-  return True
+  return len(result) != 0
 
 def amIThere(file):
-    filesUploaded = []
-    with open("./dataUploaded.txt") as log:
-        filesUploaded = [line.strip() for line in log]
-    print(filesUploaded)
+  filesUploaded = []
+  with open("./dataUploaded.txt") as log:
+      filesUploaded = [line.strip() for line in log]
+  print(filesUploaded)
 
-    if file in filesUploaded:
-        return True
-    return False
+  return file in filesUploaded

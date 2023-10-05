@@ -22,7 +22,7 @@ class Upload(commands.Cog):
         if not checkIfGuildPresent(ctx.guild.id):
             # embed
             embed = discord.Embed(
-                description="You are not registered, please run `" + PREFIX + "setup` first",
+                description=f"You are not registered, please run `{PREFIX}setup` first",
                 title="",
                 color=discord.Color.red(),
             )

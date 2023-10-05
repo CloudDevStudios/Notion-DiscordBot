@@ -36,10 +36,10 @@ async def delByTitle(ctx, query, client, bot):
     )
     for result in search_results:
         # make sure title and url are present
-        if result.title.strip() == "" and result.url == None:
+        if result.title.strip() == "" and result.url is None:
             continue
         embed.add_field(
-            name=str(count) + ". " + result.title.strip(),
+            name=f"{str(count)}. {result.title.strip()}",
             value=result.url,
             inline=False,
         )
@@ -56,7 +56,7 @@ async def delByTitle(ctx, query, client, bot):
     except asyncio.TimeoutError:
         embed = discord.Embed(
             title="No response",
-            description=f"Waited for 60s no response received",
+            description="Waited for 60s no response received",
             color=discord.Color.red(),
         )
         await ctx.send("You have not responded for 60s so quitting!")
@@ -120,10 +120,10 @@ async def delByTag(ctx, query, client, bot, args):
     )
     for result in search_results:
         # make sure title and url are present
-        if result.title.strip() == "" and result.url == None:
+        if result.title.strip() == "" and result.url is None:
             continue
         embed.add_field(
-            name=str(count) + ". " + result.title.strip(),
+            name=f"{str(count)}. {result.title.strip()}",
             value=result.url,
             inline=False,
         )
@@ -140,7 +140,7 @@ async def delByTag(ctx, query, client, bot, args):
     except asyncio.TimeoutError:
         embed = discord.Embed(
             title="No response",
-            description=f"Waited for 60s no response received",
+            description="Waited for 60s no response received",
             color=discord.Color.red(),
         )
         await ctx.send("You have not responded for 60s so quitting!")
@@ -177,7 +177,7 @@ class Delete(commands.Cog):
     async def delete(self, ctx, *args):
         if not checkIfGuildPresent(ctx.guild.id):
             embed = discord.Embed(
-                description="You are not registered, please run `" + PREFIX + "setup` first",
+                description=f"You are not registered, please run `{PREFIX}setup` first",
                 title="",
                 color=discord.Color.red(),
             )
@@ -192,9 +192,7 @@ class Delete(commands.Cog):
         # get guild info
         client = self.guild_data[str(guild_id)]
 
-        query = getQueryForTitle(args)
-
-        if query:
+        if query := getQueryForTitle(args):
             if not client.tag:
                 # no tags enabled so search by title
                 # get the title of the message
@@ -215,7 +213,7 @@ class Delete(commands.Cog):
     async def deleteTitle(self, ctx, *args):
         if not checkIfGuildPresent(ctx.guild.id):
             embed = discord.Embed(
-                description="You are not registered, please run `" + PREFIX + "setup` first",
+                description=f"You are not registered, please run `{PREFIX}setup` first",
                 title="",
                 color=discord.Color.red(),
             )
@@ -230,7 +228,7 @@ class Delete(commands.Cog):
         # get guild info
         client = self.guild_data[str(guild_id)]
 
-        if len(args) == 0:
+        if not args:
             # embed
             embed = discord.Embed(
                 title="No query found",
